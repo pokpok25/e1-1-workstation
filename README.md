@@ -343,23 +343,41 @@ WARNING: DOCKER_INSECURE_NO_IPTABLES_RAW is set
 
 ```
 $ docker pull nginx:alpine
-<여기에 실제 출력 붙이기>
+alpine: Pulling from library/nginx
+f4a8c3eaf855: Pull complete 
+5faf28e117a4: Pull complete 
+a6fb6399df14: Pull complete 
+1b5b466c140b: Pull complete 
+b25486411ab9: Pull complete 
+89c6596257b9: Pull complete 
+b90627b8f429: Pull complete 
+66eb34db8c04: Pull complete 
+8dcd939ce874: Download complete 
+eeedce541506: Download complete 
+Digest: sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
+Status: Downloaded newer image for nginx:alpine
+docker.io/library/nginx:alpine
 ```
 
 </details>
 
 ```
 $ docker images
-<여기에 실제 출력 붙이기>
+                                                                                                                             i Info →   U  In Use
+IMAGE           ID             DISK USAGE   CONTENT SIZE   EXTRA
+alpine:latest   be2656061b53       14.6MB         4.28MB    U   
+nginx:alpine    713fc2ebfd92       95.3MB         27.2MB        
+nginx:latest    5ab5b0b01097        261MB         65.1MB    U   
 ```
 
 **컨테이너 실행 · 목록 · 로그 · 자원 · 중지**
 
 ```
 $ docker run -d --name ops-nginx nginx:alpine
-<여기에 실제 출력 붙이기>
+ecf497f05a450d62fa4b5dd11fca42fdb9a67f70b34cd74033ced822680ec135
 $ docker ps
-<여기에 실제 출력 붙이기>
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS     NAMES
+ecf497f05a45   nginx:alpine   "/docker-entrypoint.…"   14 seconds ago   Up 17 seconds   80/tcp    ops-nginx
 ```
 
 <details>
@@ -367,19 +385,53 @@ $ docker ps
 
 ```
 $ docker logs ops-nginx
-<여기에 실제 출력 붙이기>
+/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/11/10 13:54:15 [notice] 1#1: using the "epoll" event method
+2026/11/10 13:54:15 [notice] 1#1: nginx/1.31.8
+2026/11/10 13:54:15 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+2026/11/10 13:54:15 [notice] 1#1: OS: Linux 7.2.12-orbstack-00394-gbecdd6130068
+2026/11/10 13:54:15 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 20480:1048576
+2026/11/10 13:54:15 [notice] 1#1: start worker processes
+2026/11/10 13:54:15 [notice] 1#1: start worker process 29
+2026/11/10 13:54:15 [notice] 1#1: start worker process 30
+2026/11/10 13:54:15 [notice] 1#1: start worker process 31
+2026/11/10 13:54:15 [notice] 1#1: start worker process 32
+2026/11/10 13:54:15 [notice] 1#1: start worker process 33
+2026/11/10 13:54:15 [notice] 1#1: start worker process 34
+2026/11/10 13:54:15 [notice] 1#1: start worker process 35
+2026/11/10 13:54:15 [notice] 1#1: start worker process 36
+2026/11/10 13:54:15 [notice] 1#1: start worker process 37
+2026/11/10 13:54:15 [notice] 1#1: start worker process 38
+2026/11/10 13:54:15 [notice] 1#1: start worker process 39
+2026/11/10 13:54:15 [notice] 1#1: start worker process 40
 ```
 
 </details>
 
 ```
 $ docker stats --no-stream
-<여기에 실제 출력 붙이기>
+CONTAINER ID   NAME        CPU %     MEM USAGE / LIMIT     MEM %     NET I/O         BLOCK I/O     PIDS
+ecf497f05a45   ops-nginx   0.00%     9.699MiB / 15.66GiB   0.06%     1.66kB / 126B   10.2MB / 0B   13
 $ docker stop ops-nginx
-<여기에 실제 출력 붙이기>
+ops-nginx
 $ docker ps -a
-<여기에 실제 출력 붙이기>
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS                      PORTS     NAMES
+ecf497f05a45   nginx:alpine   "/docker-entrypoint.…"   3 minutes ago   Exited (0) 52 seconds ago             ops-nginx
+baa26146bda0   alpine         "sh"                     5 days ago      Exited (137) 4 days ago               box1
+0df0342f1b67   nginx          "/docker-entrypoint.…"   5 days ago      Exited (0) 4 days ago                 web
 ```
+
+- `docker images`에 받은 `nginx:alpine`(95.3MB)이 보인다 — 같은 nginx라도 alpine 판이 `nginx:latest`(261MB)보다 훨씬 작다
+- 실행 직후 `docker ps`에서 `ops-nginx`가 `Up` → `docker stop` 뒤 `docker ps -a`에서 `Exited (0)` — 멈춘 컨테이너는 `ps`에서 빠지고 `ps -a`에만 남는다(`box1` · `web`은 이전 실습에서 만든 컨테이너)
+- `docker logs`로 nginx가 켜지며 남긴 기록(`Configuration complete; ready for start up`)을, `docker stats --no-stream`으로 메모리 사용량(약 9.7MiB)을 확인했다
 
 ## 8. 컨테이너 실습
 
