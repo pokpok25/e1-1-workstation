@@ -75,7 +75,7 @@ $ git --version
 ## 3. 수행 체크리스트
 
 - [x] 터미널: 위치 · 목록 · 이동 · 생성 · 복사 · 이름변경 · 삭제 · 내용 확인 · 빈 파일 → [4절](#4-터미널-조작-로그)
-- [ ] 권한: 파일 1개 · 디렉토리 1개 변경 전/후 → [5절](#5-권한-실습)
+- [x] 권한: 파일 1개 · 디렉토리 1개 변경 전/후 → [5절](#5-권한-실습)
 - [ ] Docker: 설치 점검 · 기본 운영 · 컨테이너 실습 → [6절](#6-docker-설치-점검) · [7절](#7-docker-기본-운영) · [8절](#8-컨테이너-실습)
 - [ ] Dockerfile: 커스텀 이미지 빌드 · 실행 → [9절](#9-커스텀-이미지)
 - [ ] 포트: `-p`로 두 포트 접속 → [10절](#10-포트-매핑-접속)
@@ -183,25 +183,27 @@ $ pwd
 $ echo '#!/bin/sh' > hello.sh
 $ echo 'echo hello from script' >> hello.sh
 $ ls -l hello.sh
-<여기에 실제 출력 붙이기>
+-rw-r--r--@ 1 jmac  staff  33 Nov 10 21:09 hello.sh
 $ ./hello.sh
-<여기에 실제 출력 붙이기>
+zsh: permission denied: ./hello.sh
 $ chmod 755 hello.sh
 $ ls -l hello.sh
-<여기에 실제 출력 붙이기>
+-rwxr-xr-x@ 1 jmac  staff  33 Nov 10 21:09 hello.sh
 $ ./hello.sh
-<여기에 실제 출력 붙이기>
+hello from script
 ```
+- 바꾸기 전 `-rw-r--r--`(644)라 실행(x)이 없어 `./hello.sh`가 `permission denied` → `chmod 755` 뒤 `-rwxr-xr-x`로 x가 생겨 실행됐다(`hello from script`)
 
 **디렉토리 1개 — 나만 쓰게 바꾸기**
 
 ```
 $ ls -ld backup
-<여기에 실제 출력 붙이기>
+drwxr-xr-x@ 3 jmac  staff  96 Nov 10 16:58 backup
 $ chmod 700 backup
 $ ls -ld backup
-<여기에 실제 출력 붙이기>
+drwx------@ 3 jmac  staff  96 Nov 10 16:58 backup
 ```
+- 바꾸기 전 `drwxr-xr-x`(755) → `chmod 700` 뒤 `drwx------` — 그룹 · 기타의 r · x가 사라져 나만 읽고 · 쓰고 · 들어갈 수 있다
 
 | 숫자 | 글자 | 뜻 |
 |---|---|---|
