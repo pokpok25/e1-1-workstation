@@ -44,11 +44,11 @@ e1-1-workstation/
 
 | 항목 | 값 |
 |---|---|
-| OS | macOS [채움: sw_vers의 ProductVersion] |
-| 셸 | [채움: zsh --version 결과] |
-| 터미널 | [채움: echo $TERM_PROGRAM 결과] |
-| Docker | [채움: docker --version 결과] (OrbStack) |
-| Git | [채움: git --version 결과] |
+| OS | macOS 26.5.2 (빌드 25F84) |
+| 셸 | zsh 5.9 (`/bin/zsh`) |
+| 터미널 | VSCode 내장 터미널 (`TERM_PROGRAM=vscode`) |
+| Docker | Docker version 29.8.2 (OrbStack) |
+| Git | git version 2.50.1 (Apple Git-155) |
 
 로그의 `$`는 프롬프트를 줄여 적은 것이다(셸은 zsh).
 
@@ -57,17 +57,19 @@ e1-1-workstation/
 
 ```
 $ sw_vers
-<여기에 실제 출력 붙이기>
+ProductName:            macOS
+ProductVersion:         26.5.2
+BuildVersion:           25F84
 $ echo $SHELL
-<여기에 실제 출력 붙이기>
+/bin/zsh
 $ zsh --version
-<여기에 실제 출력 붙이기>
+zsh 5.9 (arm64-apple-darwin25.0)
 $ echo $TERM_PROGRAM
-<여기에 실제 출력 붙이기>
-$ docker --version
-<여기에 실제 출력 붙이기>
+vscode
 $ git --version
-<여기에 실제 출력 붙이기>
+git version 2.50.1 (Apple Git-155)
+$ docker --version
+Docker version 29.8.2, build 7fc2dff
 ```
 
 </details>
@@ -219,15 +221,115 @@ OrbStack 앱을 켜면 Docker 엔진이 함께 실행되고, 터미널에서 `do
 
 ```
 $ docker --version
-<여기에 실제 출력 붙이기>
+Docker version 29.8.2, build 7fc2dff
 ```
+
+- `docker --version` → 내가 치는 `docker` 명령 프로그램(클라이언트) 29.8.2가 설치돼 있다
+- `docker info`의 `Server:` 아래 `Server Version: 29.8.2` · `Operating System: OrbStack` · `OSType: linux`가 나왔다 → Docker 엔진(데몬)이 OrbStack 속 리눅스에서 돌고 있다(엔진이 꺼져 있으면 `Server:` 대신 에러가 난다)
 
 <details>
 <summary>docker info — 데몬 동작 확인(Server 부분)</summary>
 
 ```
 $ docker info
-<여기에 실제 출력 붙이기>
+Client:
+ Version:    29.8.2
+ Context:    orbstack
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.37.2
+    Path:     /Users/jmac/.docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v5.5.0
+    Path:     /Users/jmac/.docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 2
+  Running: 0
+  Paused: 0
+  Stopped: 2
+ Images: 2
+ Server Version: 29.8.2
+ Storage Driver: overlayfs
+  driver-type: io.containerd.snapshotter.v1
+ Logging Driver: json-file
+ Cgroup Driver: cgroupfs
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ CDI spec directories:
+  /etc/cdi
+  /var/run/cdi
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: ee2735368117d2eb259779949d5e75cdafec9761
+ runc version: 29dd3dc2b13b4123162e5fe132504bb4b15569f1
+ init version: de40ad0
+ Security Options:
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 7.2.12-orbstack-00394-gbecdd6130068
+ Operating System: OrbStack
+ OSType: linux
+ Architecture: aarch64
+ CPUs: 12
+ Total Memory: 15.66GiB
+ Name: orbstack
+ ID: cd3d9065-e724-4633-a46c-cd03cdeae7cf
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ HTTP Proxy: http://proxy.orb.internal:8305
+ HTTPS Proxy: http://proxy.orb.internal:8305
+ No Proxy: localhost,127.0.0.1,127.0.0.0/8,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,0.250.250.0/24,*.orb.internal,*.local,gateway.docker.internal,host.internal,host.docker.internal,host.lima.internal,docker.for.mac.localhost,docker.for.mac.host.internal
+ Experimental: true
+ Insecure Registries:
+  127.0.0.0/8
+  ::1/128
+ Live Restore Enabled: false
+ Product License: Community Engine
+ Default Address Pools:
+   Base: 192.168.97.0/24, Size: 24
+   Base: 192.168.107.0/24, Size: 24
+   Base: 192.168.117.0/24, Size: 24
+   Base: 192.168.147.0/24, Size: 24
+   Base: 192.168.148.0/24, Size: 24
+   Base: 192.168.155.0/24, Size: 24
+   Base: 192.168.156.0/24, Size: 24
+   Base: 192.168.158.0/24, Size: 24
+   Base: 192.168.163.0/24, Size: 24
+   Base: 192.168.164.0/24, Size: 24
+   Base: 192.168.165.0/24, Size: 24
+   Base: 192.168.166.0/24, Size: 24
+   Base: 192.168.167.0/24, Size: 24
+   Base: 192.168.171.0/24, Size: 24
+   Base: 192.168.172.0/24, Size: 24
+   Base: 192.168.181.0/24, Size: 24
+   Base: 192.168.183.0/24, Size: 24
+   Base: 192.168.186.0/24, Size: 24
+   Base: 192.168.207.0/24, Size: 24
+   Base: 192.168.214.0/24, Size: 24
+   Base: 192.168.215.0/24, Size: 24
+   Base: 192.168.216.0/24, Size: 24
+   Base: 192.168.223.0/24, Size: 24
+   Base: 192.168.227.0/24, Size: 24
+   Base: 192.168.228.0/24, Size: 24
+   Base: 192.168.229.0/24, Size: 24
+   Base: 192.168.237.0/24, Size: 24
+   Base: 192.168.239.0/24, Size: 24
+   Base: 192.168.242.0/24, Size: 24
+   Base: 192.168.247.0/24, Size: 24
+   Base: fd07:b51a:cc66:d000::/56, Size: 64
+ Firewall Backend: iptables
+  EnableUserlandProxy: true
+  UserlandProxyPath: /opt/orbstack-guest/pstub
+
+WARNING: DOCKER_INSECURE_NO_IPTABLES_RAW is set
 ```
 
 </details>
