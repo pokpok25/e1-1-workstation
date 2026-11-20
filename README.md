@@ -728,6 +728,7 @@ $ curl -s http://localhost:8089
 - `docker ps`의 PORTS `0.0.0.0:8088->80/tcp` → 맥의 8088번으로 들어온 요청이 컨테이너의 80번으로 넘어간다
 - 같은 이미지로 띄운 두 컨테이너가 안에서는 둘 다 80번을 쓰지만, 맥 쪽 포트(8088 · 8089)가 달라 동시에 돌고 둘 다 같은 페이지를 준다
 - 기본 nginx 환영 페이지가 아니라 `app/index.html`의 `pokpok25의 개발 작업실`이 나온다 → 9절 `COPY`가 적용된 내 이미지다
+- 이미 쓰는 호스트 포트로 또 띄우면 `port is already allocated`로 실패한다 — 진단(어느 프로세스 · 컨테이너가 포트를 쓰나)과 해제 방법은 [15절 3)](#3-포트-충돌--port-is-already-allocated)
 
 ## 11. 바인드 마운트
 
@@ -928,6 +929,7 @@ Everything up-to-date
 | 컨테이너 | `docker ps -a` | attach 뒤 `exit`한 컨테이너 상태 | [8절](#8-컨테이너-실습) |
 | 커스텀 이미지 | `docker images pokpok-web` | 내 이미지 `pokpok-web:1.0` | [9절](#9-커스텀-이미지) |
 | 포트 매핑 | `curl -s http://localhost:8088` | 내 페이지 HTML | [10절](#10-포트-매핑-접속) |
+| 포트 충돌 진단 | `lsof -nP -iTCP:8088 -sTCP:LISTEN` · `docker ps --filter publish=8088` | 포트를 쓰는 프로세스 · 컨테이너 | [15절 3)](#3-포트-충돌--port-is-already-allocated) |
 | 바인드 마운트 | `curl -s http://localhost:8090/bind-check.txt` | 다시 빌드 없이 내용이 바뀜 | [11절](#11-바인드-마운트) |
 | 볼륨 | `docker exec keeper-2 cat /saved/note.txt` | 삭제 전과 같은 내용 | [12절](#12-볼륨-영속성) |
 | Git · GitHub | `git config --list` · `git remote -v` | 사용자 · 기본 브랜치 · origin 주소 | [13절](#13-git-설정과-github-vscode-연동) |
@@ -964,6 +966,49 @@ $ docker logs ops-nginx
 | 확인 | 같은 자리에서 친 `docker ps -a` · `docker attach`도 모두 `command not found`였다(8절 기록) |
 | 해결/대안 | `exit`로 컨테이너에서 나와 프롬프트가 `$`로 돌아온 뒤 맥에서 `docker ps`를 치니 `ubuntu-keep`이 `Up`으로 보였다 |
 
+### 3) 포트 충돌 — `port is already allocated`
+
+| 단계 | 내용 |
+|---|---|
+| 문제 | 8088번으로 컨테이너를 하나 더 띄우려 했더니 `Bind for 0.0.0.0:8088 failed: port is already allocated` 에러가 났다 |
+| 원인 가설 | 맥의 8088번 포트를 이미 다른 프로그램(10절의 `web-8088`)이 쓰고 있다. 맥 쪽 포트 하나는 한 번에 하나만 쓸 수 있다 |
+| 확인 | ① `lsof -nP -iTCP:8088 -sTCP:LISTEN` → 맥에서 8088을 듣는 프로세스는 `OrbStack`(Docker 엔진) ② `docker ps --filter publish=8088` → 그 포트를 쓰는 컨테이너는 `web-8088` ③ 실패한 `web-dup`은 `Created` 상태로 남아 있었다 |
+| 해결/대안 | 남은 `web-dup`을 `docker rm`으로 지우고, 포트를 쓰던 `web-8088`을 `docker stop`으로 멈추자 `lsof` 결과가 비었다(포트 해제) → 같은 명령이 성공하고 `curl`이 `200`. 대안: 포트를 비우지 않고 `-p 8089:80`처럼 **다른 호스트 포트**를 쓴다(10절). 확인 뒤 `web-dup`을 지우고 `web-8088`은 다시 켰다 |
+
+```
+$ docker run -d -p 8088:80 --name web-dup pokpok-web:1.0
+b4f898e3924641d49c581abeb80385ef71bf662128eb7d9c052e041e63068ffd
+docker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint web-dup (0164010690e8cca7ed1ebec5e770e2748e7c7e007350ca991fd45fe0cf27c18a): Bind for 0.0.0.0:8088 failed: port is already allocated
+
+Run 'docker run --help' for more information
+$ docker ps -a --filter name=web-dup
+CONTAINER ID   IMAGE            COMMAND                  CREATED        STATUS    PORTS     NAMES
+b4f898e39246   pokpok-web:1.0   "/docker-entrypoint.…"   1 second ago   Created             web-dup
+$ lsof -nP -iTCP:8088 -sTCP:LISTEN
+COMMAND    PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+OrbStack  8100 jmac   99u  IPv4 0x3359e56738bcc01b      0t0  TCP *:8088 (LISTEN)
+OrbStack  8100 jmac  123u  IPv6 0x1b7d939935aa4689      0t0  TCP *:8088 (LISTEN)
+$ docker ps --filter publish=8088
+CONTAINER ID   IMAGE            COMMAND                  CREATED             STATUS             PORTS                                     NAMES
+7e8214b64db9   pokpok-web:1.0   "/docker-entrypoint.…"   About an hour ago   Up About an hour   0.0.0.0:8088->80/tcp, [::]:8088->80/tcp   web-8088
+$ docker rm web-dup
+web-dup
+$ docker stop web-8088
+web-8088
+$ lsof -nP -iTCP:8088 -sTCP:LISTEN
+$ docker run -d -p 8088:80 --name web-dup pokpok-web:1.0
+2fd12c9772d446589a79e3288f1c20c80d9abc878d9cf50c565b342d7d61e267
+$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8088
+200
+$ docker rm -f web-dup
+web-dup
+$ docker start web-8088
+web-8088
+```
+
+- `lsof -nP -iTCP:<포트> -sTCP:LISTEN` = 그 포트를 열고 기다리는(LISTEN) 프로세스를 보여 준다(`-n` · `-P`는 주소 · 포트를 이름으로 바꾸지 않고 숫자로). Docker 컨테이너 포트는 맥에서 `OrbStack`으로 보이므로, 어느 컨테이너인지는 `docker ps --filter publish=<포트>`로 찾는다
+- 리눅스라면 `lsof` 대신 `ss -ltnp | grep :8088`로도 확인한다. 컨테이너가 아닌 프로그램이 포트를 쓰고 있으면 그 프로그램을 끄거나 다른 호스트 포트를 고른다
+
 ## 16. 보안 점검
 
 - 커밋 · `git config` 출력에 보이는 메일은 학습 전용 계정의 메일이라 공개로 두었다.
@@ -974,9 +1019,9 @@ $ docker logs ops-nginx
 $ git grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' -- . ':!README.md'
 $ git log -p --all -- . ':!README.md' | grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password'
 $ grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' README.md
-974:$ git grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' -- . ':!README.md'
-976:$ git log -p --all -- . ':!README.md' | grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password'
-978:$ grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' README.md
+1019:$ git grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' -- . ':!README.md'
+1020:$ git log -p --all -- . ':!README.md' | grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password'
+1021:$ grep -nE 'gh[pousr]_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|password' README.md
 ```
 
 첫째 · 둘째 줄은 출력이 없다 = 0건. 셋째 줄은 README 안의 이 검색 명령 세 줄만 걸렸다 = 실제 비밀값 0건(이 결과를 붙이기 전에 검사했다).
